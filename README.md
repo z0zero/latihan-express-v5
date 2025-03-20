@@ -12,8 +12,8 @@ A simple REST API for managing books using Express.js v5 and MySQL database with
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd book-api
+git clone https://github.com/z0zero/latihan-express-v5.git
+cd latihan-express-v5
 
 # Install backend dependencies
 npm install
