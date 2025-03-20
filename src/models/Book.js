@@ -1,93 +1,88 @@
 /**
- * Book Model - Using MySQL database
+ * Book Model - Represents the Book entity
+ *
+ * Schema for Book:
+ * - id: Primary key, auto-incremented
+ * - title: The title of the book (required)
+ * - author: The author of the book (required)
+ * - year: The publication year (optional)
+ * - genre: The genre of the book (optional)
  */
-const { pool } = require("../config/database");
 
-// Book Model operations
+/**
+ * Book model definition
+ * @typedef {Object} Book
+ * @property {number} id - Unique identifier
+ * @property {string} title - Book title
+ * @property {string} author - Book author
+ * @property {number|null} year - Publication year
+ * @property {string|null} genre - Book genre
+ */
+
+/**
+ * Table name in the database
+ */
+const TABLE_NAME = "books";
+
+/**
+ * Column definitions for Book
+ */
+const COLUMNS = {
+  ID: "id",
+  TITLE: "title",
+  AUTHOR: "author",
+  YEAR: "year",
+  GENRE: "genre",
+};
+
+/**
+ * Book model
+ */
 const Book = {
-  // Get all books
-  findAll: async () => {
-    try {
-      const [rows] = await pool.query("SELECT * FROM books");
-      return rows;
-    } catch (error) {
-      console.error("Error finding all books:", error.message);
-      throw error;
-    }
+  TABLE_NAME,
+  COLUMNS,
+
+  /**
+   * Creates a Book object from database row
+   * @param {Object} row - Database row
+   * @returns {Book} Book object
+   */
+  fromDbRow: (row) => {
+    if (!row) return null;
+
+    return {
+      id: row.id,
+      title: row.title,
+      author: row.author,
+      year: row.year || null,
+      genre: row.genre || null,
+    };
   },
 
-  // Get book by ID
-  findById: async (id) => {
-    try {
-      const [rows] = await pool.query("SELECT * FROM books WHERE id = ?", [id]);
-      return rows.length ? rows[0] : null;
-    } catch (error) {
-      console.error(`Error finding book with id ${id}:`, error.message);
-      throw error;
+  /**
+   * Validates book data
+   * @param {Object} bookData - Book data to validate
+   * @returns {Object} Object containing validation result and error messages
+   */
+  validate: (bookData) => {
+    const errors = [];
+
+    if (!bookData.title || bookData.title.trim() === "") {
+      errors.push("Title is required");
     }
-  },
 
-  // Create new book
-  create: async (bookData) => {
-    try {
-      const { title, author, year, genre } = bookData;
-      const [result] = await pool.query(
-        "INSERT INTO books (title, author, year, genre) VALUES (?, ?, ?, ?)",
-        [title, author, year, genre]
-      );
-
-      const id = result.insertId;
-      return { id, title, author, year, genre };
-    } catch (error) {
-      console.error("Error creating book:", error.message);
-      throw error;
+    if (!bookData.author || bookData.author.trim() === "") {
+      errors.push("Author is required");
     }
-  },
 
-  // Update book
-  update: async (id, bookData) => {
-    try {
-      // Check if book exists
-      const book = await Book.findById(id);
-      if (!book) {
-        return null;
-      }
-
-      // Update book data
-      const { title, author, year, genre } = bookData;
-
-      const [result] = await pool.query(
-        "UPDATE books SET title = ?, author = ?, year = ?, genre = ? WHERE id = ?",
-        [
-          title || book.title,
-          author || book.author,
-          year || book.year,
-          genre || book.genre,
-          id,
-        ]
-      );
-
-      if (result.affectedRows === 0) {
-        return null;
-      }
-
-      // Return updated book
-      return await Book.findById(id);
-    } catch (error) {
-      console.error(`Error updating book with id ${id}:`, error.message);
-      throw error;
+    if (bookData.year && isNaN(bookData.year)) {
+      errors.push("Year must be a number");
     }
-  },
 
-  // Delete book
-  delete: async (id) => {
-    try {
-      const [result] = await pool.query("DELETE FROM books WHERE id = ?", [id]);
-      return result.affectedRows > 0;
-    } catch (error) {
-      console.error(`Error deleting book with id ${id}:`, error.message);
-      throw error;
-    }
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
   },
 };
 
