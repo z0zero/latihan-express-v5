@@ -15,8 +15,13 @@ A simple REST API for managing books using Express.js v5 and MySQL database with
 git clone <repository-url>
 cd book-api
 
-# Install dependencies
+# Install backend dependencies
 npm install
+
+# Install frontend dependencies
+cd frontend
+npm install
+cd ..
 ```
 
 ## Configuration
@@ -44,14 +49,19 @@ JWT_REFRESH_EXPIRES_IN=7d
 ## Usage
 
 ```bash
-# Run in development mode
+# Run backend in development mode
 npm run dev
 
-# Run in production mode
+# Run frontend in development mode
+cd frontend
+npm run dev
+
+# Run backend in production mode
 npm start
 ```
 
 The API will be available at `http://localhost:3000/api`
+The frontend will be available at `http://localhost:5173`
 
 ## Database Setup
 
@@ -270,36 +280,83 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ## Project Structure
 
 ```
-book-api/
-├── src/
-│   ├── config/
-│   │   ├── index.js         # Main configuration
-│   │   ├── database.js      # Database connection
-│   │   ├── database.sql     # SQL schema
-│   │   └── initDb.js        # Database initialization
-│   ├── controllers/
-│   │   ├── authController.js # Auth controllers
-│   │   └── bookController.js # Book controllers
-│   ├── middleware/
-│   │   └── auth.js          # Authentication middleware
-│   ├── models/
-│   │   ├── Book.js          # Book model
-│   │   └── User.js          # User model
-│   ├── routes/
-│   │   ├── index.js         # Routes index
-│   │   ├── authRoutes.js    # Auth routes
-│   │   └── bookRoutes.js    # Book routes
-│   ├── validators/
-│   │   ├── index.js         # Global validation utilities
-│   │   ├── authValidator.js # Auth validation rules
-│   │   └── bookValidator.js # Book validation rules
-│   └── index.js             # Application entry point
-├── .env                     # Environment variables (not in git)
-├── .env.example             # Example environment variables
-├── .gitignore               # Git ignore file
-├── package.json             # Project metadata and dependencies
-└── README.md                # This file
+express-js/crud/
+├── backend/                # Backend directory
+│   ├── src/
+│   │   ├── config/
+│   │   │   ├── index.js    # Main configuration
+│   │   │   ├── database.js # Database connection
+│   │   │   ├── database.sql # SQL schema
+│   │   │   └── initDb.js   # Database initialization
+│   │   ├── controllers/
+│   │   │   ├── authController.js # Auth controllers
+│   │   │   └── bookController.js # Book controllers
+│   │   ├── middleware/
+│   │   │   └── auth.js     # Authentication middleware
+│   │   ├── models/
+│   │   │   ├── Book.js     # Book model
+│   │   │   └── User.js     # User model
+│   │   ├── routes/
+│   │   │   ├── index.js    # Routes index
+│   │   │   ├── authRoutes.js # Auth routes
+│   │   │   └── bookRoutes.js # Book routes
+│   │   ├── validators/
+│   │   │   ├── index.js    # Global validation utilities
+│   │   │   ├── authValidator.js # Auth validation rules
+│   │   │   └── bookValidator.js # Book validation rules
+│   │   └── index.js        # Application entry point
+│   ├── .env                # Environment variables (not in git)
+│   ├── .env.example        # Example environment variables
+│   ├── package.json        # Backend dependencies and scripts
+│   └── README.md           # Backend documentation
+│
+├── frontend/              # Frontend directory
+│   ├── src/
+│   │   ├── assets/        # Static assets
+│   │   ├── components/    # Reusable components
+│   │   │   ├── Navbar.jsx # Navigation bar component
+│   │   │   └── ProtectedRoute.jsx # Authentication route wrapper
+│   │   ├── context/
+│   │   │   └── AuthContext.jsx # Authentication context
+│   │   ├── pages/
+│   │   │   ├── Home.jsx   # Home page
+│   │   │   ├── Login.jsx  # Login page
+│   │   │   ├── Register.jsx # Registration page
+│   │   │   ├── BookList.jsx # Book listing page
+│   │   │   └── BookForm.jsx # Book creation/edit form
+│   │   ├── utils/
+│   │   │   └── api.js     # API configuration with Axios
+│   │   ├── App.jsx        # Main app component
+│   │   ├── main.jsx       # Entry point
+│   │   └── index.css      # Global styles with Tailwind imports
+│   ├── index.html         # HTML template
+│   ├── vite.config.js     # Vite configuration
+│   ├── tailwind.config.js # Tailwind CSS configuration
+│   ├── postcss.config.js  # PostCSS configuration
+│   └── package.json       # Frontend dependencies and scripts
+│
+├── .gitignore            # Git ignore file
+├── package.json          # Project metadata and dependencies
+└── README.md             # This file
 ```
+
+## Technologies Used
+
+### Backend
+
+- Express.js v5
+- MySQL
+- JWT Authentication
+- Express Validator
+
+### Frontend
+
+- React 19
+- React Router DOM 7
+- Tailwind CSS 4
+- Axios
+- JWT Decode
+- Vite
 
 ## Contributing
 
