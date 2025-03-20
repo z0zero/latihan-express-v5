@@ -33,7 +33,7 @@ const Navbar = () => {
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
                 <span className="text-gray-600">
-                  Hello, {user?.username || "User"}
+                  Hello, {user?.name || "User"}
                 </span>
                 <Link
                   to="/books/new"
