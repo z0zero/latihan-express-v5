@@ -41,16 +41,16 @@ const BookList = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[100vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#2563eb]"></div>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-[80rem] mx-auto px-4 py-8">
-        <div className="bg-[#fee2e2] border border-[#f87171] text-[#b91c1c] p-3 rounded">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="bg-red-100 border border-red-400 text-red-700 p-3 rounded">
           {error}
         </div>
       </div>
@@ -58,9 +58,9 @@ const BookList = () => {
   }
 
   return (
-    <div className="max-w-[80rem] mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-[#111827]">Daftar Buku</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Daftar Buku</h1>
         {isAuthenticated && (
           <Link to="/books/new" className="btn btn-primary">
             Tambah Buku
@@ -70,52 +70,52 @@ const BookList = () => {
 
       {books.length === 0 ? (
         <div className="text-center py-10">
-          <p className="text-[#6b7280]">
+          <p className="text-gray-500">
             Belum ada buku. Silakan tambahkan buku baru.
           </p>
         </div>
       ) : (
         <div className="bg-white shadow overflow-hidden rounded-lg">
-          <table className="min-w-full divide-y divide-[#e5e7eb]">
-            <thead className="bg-[#f9fafb]">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Judul
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Penulis
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Tahun
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Genre
                 </th>
                 {isAuthenticated && (
-                  <th className="px-6 py-3 text-right text-xs font-medium text-[#6b7280] uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Aksi
                   </th>
                 )}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-[#e5e7eb]">
+            <tbody className="bg-white divide-y divide-gray-200">
               {books.map((book) => (
                 <tr key={book.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-[#111827]">
+                    <div className="text-sm font-medium text-gray-900">
                       {book.title}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-[#6b7280]">{book.author}</div>
+                    <div className="text-sm text-gray-500">{book.author}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-[#6b7280]">
+                    <div className="text-sm text-gray-500">
                       {book.year || "-"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-[#6b7280]">
+                    <div className="text-sm text-gray-500">
                       {book.genre || "-"}
                     </div>
                   </td>

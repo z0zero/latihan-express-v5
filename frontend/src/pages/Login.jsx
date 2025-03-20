@@ -42,17 +42,17 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-[100vh] flex items-center justify-center bg-[#f9fafb] py-12 px-4">
-      <div className="card max-w-[28rem] w-full my-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+      <div className="card max-w-md w-full my-8">
         <div>
-          <h1 className="text-center text-[1.875rem] font-extrabold text-[#111827]">
+          <h1 className="text-center text-3xl font-extrabold text-gray-900">
             Login
           </h1>
-          <p className="mt-2 text-center text-sm text-[#6b7280]">
+          <p className="mt-2 text-center text-sm text-gray-500">
             Atau{" "}
             <Link
               to="/register"
-              className="font-medium text-[#2563eb] hover:text-[#1d4ed8]"
+              className="font-medium text-blue-600 hover:text-blue-700"
             >
               buat akun baru
             </Link>
@@ -60,7 +60,7 @@ const Login = () => {
         </div>
 
         {error && (
-          <div className="bg-[#fee2e2] border border-[#f87171] text-[#b91c1c] p-3 rounded mt-4">
+          <div className="bg-red-100 border border-red-400 text-red-700 p-3 rounded mt-4">
             {error}
           </div>
         )}

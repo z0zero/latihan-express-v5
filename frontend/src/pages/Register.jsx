@@ -1,17 +1,16 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import api from "../utils/api";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    name: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -26,80 +25,81 @@ const Register = () => {
     e.preventDefault();
     setError("");
 
-    // Validate form data
+    // Validate password match
     if (formData.password !== formData.confirmPassword) {
-      setError("Password tidak cocok");
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError("Password minimal 6 karakter");
+      setError("Password dan konfirmasi password tidak sama.");
       return;
     }
 
     setLoading(true);
 
     try {
-      // Remove confirmPassword from data sent to API
-      const { confirmPassword: _confirmPassword, ...registerData } = formData;
+      const response = await api.post("/auth/register", {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
 
-      const result = await register(registerData);
-
-      if (result.success) {
-        navigate("/books");
+      if (response.data?.user) {
+        // Registration successful, navigate to login
+        navigate("/login", {
+          state: { message: "Registrasi berhasil! Silakan login." },
+        });
       } else {
-        setError(result.error);
+        setError("Terjadi kesalahan saat mendaftar.");
       }
-    } catch (error) {
-      setError("Terjadi kesalahan saat registrasi.");
-      console.error("Register error:", error);
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.error || "Terjadi kesalahan saat mendaftar.";
+      setError(errorMessage);
+      console.error("Registration error:", err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[100vh] flex items-center justify-center bg-[#f9fafb] py-12 px-4">
-      <div className="card max-w-[28rem] w-full my-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+      <div className="card max-w-md w-full my-8">
         <div>
-          <h1 className="text-center text-[1.875rem] font-extrabold text-[#111827]">
-            Buat Akun
+          <h1 className="text-center text-3xl font-extrabold text-gray-900">
+            Register
           </h1>
-          <p className="mt-2 text-center text-sm text-[#6b7280]">
+          <p className="mt-2 text-center text-sm text-gray-500">
             Atau{" "}
             <Link
               to="/login"
-              className="font-medium text-[#2563eb] hover:text-[#1d4ed8]"
+              className="font-medium text-blue-600 hover:text-blue-700"
             >
-              login ke akun yang sudah ada
+              login jika sudah punya akun
             </Link>
           </p>
         </div>
 
         {error && (
-          <div className="bg-[#fee2e2] border border-[#f87171] text-[#b91c1c] p-3 rounded mt-4">
+          <div className="bg-red-100 border border-red-400 text-red-700 p-3 rounded mt-4">
             {error}
           </div>
         )}
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="name" className="form-label">
-                Nama
+        <form className="mt-8" onSubmit={handleSubmit}>
+          <div className="mb-6">
+            <div className="mb-4">
+              <label htmlFor="username" className="form-label">
+                Username
               </label>
               <input
-                id="name"
-                name="name"
+                id="username"
+                name="username"
                 type="text"
                 required
                 className="form-input"
-                placeholder="Nama Lengkap"
-                value={formData.name}
+                placeholder="Username"
+                value={formData.username}
                 onChange={handleChange}
               />
             </div>
-            <div>
+            <div className="mb-4">
               <label htmlFor="email" className="form-label">
                 Email
               </label>
@@ -114,7 +114,7 @@ const Register = () => {
                 onChange={handleChange}
               />
             </div>
-            <div>
+            <div className="mb-4">
               <label htmlFor="password" className="form-label">
                 Password
               </label>
@@ -129,7 +129,7 @@ const Register = () => {
                 onChange={handleChange}
               />
             </div>
-            <div>
+            <div className="mb-4">
               <label htmlFor="confirmPassword" className="form-label">
                 Konfirmasi Password
               </label>
@@ -139,7 +139,7 @@ const Register = () => {
                 type="password"
                 required
                 className="form-input"
-                placeholder="Konfirmasi Password"
+                placeholder="Konfirmasi password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
               />

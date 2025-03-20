@@ -97,21 +97,21 @@ const BookForm = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[100vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#2563eb]"></div>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-[80rem] mx-auto px-4 py-8">
-      <div className="max-w-[48rem] mx-auto">
-        <h1 className="text-2xl font-bold text-[#111827] mb-6">
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">
           {isEditMode ? "Edit Buku" : "Tambah Buku Baru"}
         </h1>
 
         {error && (
-          <div className="bg-[#fee2e2] border border-[#f87171] text-[#b91c1c] p-3 rounded mb-4">
+          <div className="bg-red-100 border border-red-400 text-red-700 p-3 rounded mb-4">
             {error}
           </div>
         )}
@@ -120,7 +120,7 @@ const BookForm = () => {
           <div className="space-y-4">
             <div>
               <label htmlFor="title" className="form-label">
-                Judul <span className="text-[#ef4444]">*</span>
+                Judul <span className="text-red-500">*</span>
               </label>
               <input
                 id="title"
@@ -136,7 +136,7 @@ const BookForm = () => {
 
             <div>
               <label htmlFor="author" className="form-label">
-                Penulis <span className="text-[#ef4444]">*</span>
+                Penulis <span className="text-red-500">*</span>
               </label>
               <input
                 id="author"
@@ -186,7 +186,7 @@ const BookForm = () => {
           <div className="mt-6 flex items-center justify-end space-x-3">
             <button
               type="button"
-              className="px-4 py-2 border border-[#d1d5db] rounded-md shadow-sm text-sm font-medium text-[#374151] hover:bg-[#f9fafb] focus:outline-none"
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
               onClick={() => navigate("/books")}
             >
               Batal
