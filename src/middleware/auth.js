@@ -1,9 +1,7 @@
 /**
  * Authentication Middleware
  */
-const jwt = require("jsonwebtoken");
-const config = require("../config");
-const User = require("../models/User");
+const { AuthService } = require("../models");
 
 // Middleware untuk memeriksa apakah user sudah terautentikasi
 const authenticate = async (req, res, next) => {
@@ -22,7 +20,7 @@ const authenticate = async (req, res, next) => {
     const token = authHeader.split(" ")[1];
 
     // Verify token
-    const decoded = jwt.verify(token, config.jwt.secret);
+    const decoded = AuthService.verifyToken(token);
 
     // Add user to request object
     req.user = decoded;

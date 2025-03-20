@@ -1,12 +1,12 @@
 /**
  * Book Controller
  */
-const Book = require("../models/Book");
+const { BookRepository } = require("../models");
 
 // Get all books
 const getAllBooks = async (req, res) => {
   try {
-    const books = await Book.findAll();
+    const books = await BookRepository.findAll();
     res.status(200).json({
       success: true,
       data: books,
@@ -24,7 +24,7 @@ const getAllBooks = async (req, res) => {
 // Get book by ID
 const getBookById = async (req, res) => {
   try {
-    const book = await Book.findById(req.params.id);
+    const book = await BookRepository.findById(req.params.id);
 
     if (!book) {
       return res.status(404).json({
@@ -53,7 +53,7 @@ const createBook = async (req, res) => {
     // jadi kita tidak perlu lagi validasi manual di sini
     const { title, author, year, genre } = req.body;
     const bookData = { title, author, year, genre };
-    const newBook = await Book.create(bookData);
+    const newBook = await BookRepository.create(bookData);
 
     res.status(201).json({
       success: true,
@@ -61,6 +61,13 @@ const createBook = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in createBook:", error);
+    // Jika validasi gagal, kirim error 400 dengan pesan validasi
+    if (error.statusCode === 400) {
+      return res.status(400).json({
+        success: false,
+        error: error.message,
+      });
+    }
     res.status(500).json({
       success: false,
       error: "Server Error",
@@ -71,7 +78,7 @@ const createBook = async (req, res) => {
 // Update book
 const updateBook = async (req, res) => {
   try {
-    const updatedBook = await Book.update(req.params.id, req.body);
+    const updatedBook = await BookRepository.update(req.params.id, req.body);
 
     if (!updatedBook) {
       return res.status(404).json({
@@ -86,6 +93,13 @@ const updateBook = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in updateBook:", error);
+    // Jika validasi gagal, kirim error 400 dengan pesan validasi
+    if (error.statusCode === 400) {
+      return res.status(400).json({
+        success: false,
+        error: error.message,
+      });
+    }
     res.status(500).json({
       success: false,
       error: "Server Error",
@@ -96,7 +110,7 @@ const updateBook = async (req, res) => {
 // Delete book
 const deleteBook = async (req, res) => {
   try {
-    const result = await Book.delete(req.params.id);
+    const result = await BookRepository.delete(req.params.id);
 
     if (!result) {
       return res.status(404).json({

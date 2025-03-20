@@ -1,7 +1,7 @@
 /**
  * Auth Controller
  */
-const User = require("../models/User");
+const { AuthService, UserRepository } = require("../models");
 
 // Register a new user
 const register = async (req, res) => {
@@ -9,7 +9,7 @@ const register = async (req, res) => {
     const { name, email, password } = req.body;
 
     // Register user
-    const result = await User.register({ name, email, password });
+    const result = await AuthService.register({ name, email, password });
 
     res.status(201).json({
       success: true,
@@ -22,7 +22,7 @@ const register = async (req, res) => {
   } catch (error) {
     console.error("Error in register:", error);
 
-    if (error.message === "Email sudah terdaftar") {
+    if (error.message === "Email sudah terdaftar" || error.statusCode === 400) {
       return res.status(400).json({
         success: false,
         error: error.message,
@@ -42,7 +42,7 @@ const login = async (req, res) => {
     const { email, password } = req.body;
 
     // Login user
-    const result = await User.login(email, password);
+    const result = await AuthService.login(email, password);
 
     res.status(200).json({
       success: true,
@@ -72,7 +72,7 @@ const login = async (req, res) => {
 // Get current user profile
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await UserRepository.findById(req.user.id);
 
     if (!user) {
       return res.status(404).json({
