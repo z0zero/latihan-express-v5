@@ -79,6 +79,45 @@ The application will automatically:
 }
 ```
 
+## Data Validation
+
+The API implements validation using Express Validator for the following:
+
+### Create Book Validation
+
+- `title`: Required, string, 2-255 characters
+- `author`: Required, string, 2-255 characters
+- `year`: Optional, integer between 1000 and current year
+- `genre`: Optional, string, 2-100 characters
+
+### Update Book Validation
+
+- `id`: Required, positive integer
+- `title`: Optional, string, 2-255 characters
+- `author`: Optional, string, 2-255 characters
+- `year`: Optional, integer between 1000 and current year
+- `genre`: Optional, string, 2-100 characters
+
+### Error Response Format
+
+When validation fails, the API responds with a 400 Bad Request status and a JSON object:
+
+```json
+{
+  "success": false,
+  "errors": [
+    {
+      "field": "title",
+      "message": "Judul buku wajib diisi"
+    },
+    {
+      "field": "author",
+      "message": "Penulis buku wajib diisi"
+    }
+  ]
+}
+```
+
 ## Request Examples
 
 ### Create a Book
@@ -129,6 +168,9 @@ book-api/
 │   ├── routes/
 │   │   ├── index.js         # Routes index
 │   │   └── bookRoutes.js    # Book routes
+│   ├── validators/
+│   │   ├── index.js         # Global validation utilities
+│   │   └── bookValidator.js # Book validation rules
 │   └── index.js             # Application entry point
 ├── .env                     # Environment variables (not in git)
 ├── .env.example             # Example environment variables

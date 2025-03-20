@@ -13,6 +13,7 @@ const getAllBooks = async (req, res) => {
       count: books.length,
     });
   } catch (error) {
+    console.error("Error in getAllBooks:", error);
     res.status(500).json({
       success: false,
       error: "Server Error",
@@ -37,6 +38,7 @@ const getBookById = async (req, res) => {
       data: book,
     });
   } catch (error) {
+    console.error("Error in getBookById:", error);
     res.status(500).json({
       success: false,
       error: "Server Error",
@@ -47,16 +49,9 @@ const getBookById = async (req, res) => {
 // Create new book
 const createBook = async (req, res) => {
   try {
-    // Validate request
+    // express-validator sudah menangani validasi,
+    // jadi kita tidak perlu lagi validasi manual di sini
     const { title, author, year, genre } = req.body;
-
-    if (!title || !author) {
-      return res.status(400).json({
-        success: false,
-        error: "Judul dan penulis harus diisi",
-      });
-    }
-
     const bookData = { title, author, year, genre };
     const newBook = await Book.create(bookData);
 
@@ -65,6 +60,7 @@ const createBook = async (req, res) => {
       data: newBook,
     });
   } catch (error) {
+    console.error("Error in createBook:", error);
     res.status(500).json({
       success: false,
       error: "Server Error",
@@ -89,6 +85,7 @@ const updateBook = async (req, res) => {
       data: updatedBook,
     });
   } catch (error) {
+    console.error("Error in updateBook:", error);
     res.status(500).json({
       success: false,
       error: "Server Error",
@@ -110,9 +107,11 @@ const deleteBook = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      message: "Buku berhasil dihapus",
       data: {},
     });
   } catch (error) {
+    console.error("Error in deleteBook:", error);
     res.status(500).json({
       success: false,
       error: "Server Error",

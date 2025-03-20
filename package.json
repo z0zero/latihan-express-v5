@@ -12,16 +12,18 @@
     "api",
     "rest",
     "books",
-    "mysql"
+    "mysql",
+    "validation"
   ],
   "author": "",
   "license": "ISC",
-  "description": "Simple CRUD REST API for Books using Express.js v5 with MySQL",
+  "description": "Simple CRUD REST API for Books using Express.js v5 with MySQL and validation",
   "dependencies": {
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^5.0.1",
+    "express-validator": "^7.0.1",
     "morgan": "^1.10.0",
     "mysql2": "^3.6.5"
   }
