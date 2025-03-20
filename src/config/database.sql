@@ -9,11 +9,27 @@ CREATE TABLE IF NOT EXISTS books (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Insert data awal (akan dijalankan setiap kali aplikasi dimulai)
+-- Buat tabel users jika belum ada
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  role ENUM('admin', 'user') DEFAULT 'user',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Insert data awal untuk buku (akan dijalankan setiap kali aplikasi dimulai)
 -- Gunakan DELETE dan INSERT untuk memastikan data tidak terduplikasi
 DELETE FROM books WHERE id IN (1, 2, 3);
 
 INSERT INTO books (id, title, author, year, genre) VALUES 
 (1, 'The Great Gatsby', 'F. Scott Fitzgerald', 1925, 'Novel'),
 (2, 'To Kill a Mockingbird', 'Harper Lee', 1960, 'Novel'),
-(3, 'Harry Potter and the Sorcerer''s Stone', 'J.K. Rowling', 1997, 'Fantasy'); 
+(3, 'Harry Potter and the Sorcerer''s Stone', 'J.K. Rowling', 1997, 'Fantasy');
+
+-- Insert admin user untuk testing (akan dieksekusi sekali)
+-- Password: Password123 (bcrypt hash akan berbeda setiap kali)
+INSERT IGNORE INTO users (name, email, password, role) VALUES 
+('Admin', 'admin@example.com', '$2b$10$0EuLiMLKKoFptfJEYPwuU.WQW9Stuy87lWAF6Ij0vRaRVv/OkeIcC', 'admin'); 

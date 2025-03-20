@@ -9,20 +9,29 @@ const {
   validateUpdateBook,
   validateBookId,
 } = require("../validators/bookValidator");
+const { authenticate, checkRole } = require("../middleware/auth");
 
-// GET all books
+// PUBLIC ROUTES
+// GET all books - Bisa diakses semua orang
 router.get("/", bookController.getAllBooks);
 
-// GET book by ID
+// GET book by ID - Bisa diakses semua orang
 router.get("/:id", validateBookId, bookController.getBookById);
 
-// POST new book
-router.post("/", validateCreateBook, bookController.createBook);
+// PROTECTED ROUTES - Require authentication
+// POST new book - Hanya user yang terautentikasi
+router.post("/", authenticate, validateCreateBook, bookController.createBook);
 
-// PUT/UPDATE book
-router.put("/:id", validateUpdateBook, bookController.updateBook);
+// PUT/UPDATE book - Hanya user yang terautentikasi
+router.put("/:id", authenticate, validateUpdateBook, bookController.updateBook);
 
-// DELETE book
-router.delete("/:id", validateBookId, bookController.deleteBook);
+// DELETE book - Hanya admin yang bisa menghapus
+router.delete(
+  "/:id",
+  authenticate,
+  checkRole(["admin"]),
+  validateBookId,
+  bookController.deleteBook
+);
 
 module.exports = router;
