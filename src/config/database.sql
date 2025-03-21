@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS books (
   author VARCHAR(255) NOT NULL,
   year INT,
   genre VARCHAR(100),
+  cover_image VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -20,14 +21,17 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Insert data awal untuk buku (akan dijalankan setiap kali aplikasi dimulai)
--- Gunakan DELETE dan INSERT untuk memastikan data tidak terduplikasi
-DELETE FROM books WHERE id IN (1, 2, 3);
-
+-- Insert data awal untuk buku dengan ON DUPLICATE KEY UPDATE
+-- Memperbarui data tapi tetap mempertahankan cover_image
 INSERT INTO books (id, title, author, year, genre) VALUES 
 (1, 'The Great Gatsby', 'F. Scott Fitzgerald', 1925, 'Novel'),
 (2, 'To Kill a Mockingbird', 'Harper Lee', 1960, 'Novel'),
-(3, 'Harry Potter and the Sorcerer''s Stone', 'J.K. Rowling', 1997, 'Fantasy');
+(3, 'Harry Potter and the Sorcerer''s Stone', 'J.K. Rowling', 1997, 'Fantasy')
+ON DUPLICATE KEY UPDATE 
+  title = VALUES(title),
+  author = VALUES(author),
+  year = VALUES(year),
+  genre = VALUES(genre);
 
 -- Insert admin user untuk testing (akan dieksekusi sekali)
 -- Password: Password123 (bcrypt hash akan berbeda setiap kali)

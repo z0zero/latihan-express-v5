@@ -29,13 +29,16 @@ const executeSqlFile = async (filePath) => {
 
     // Read SQL file
     const sql = fs.readFileSync(filePath, "utf8");
+    console.log(`Loaded SQL file: ${filePath}`);
 
     // Split SQL by semicolon to get individual queries
     const queries = sql.split(";").filter((query) => query.trim() !== "");
+    console.log(`Found ${queries.length} queries to execute`);
 
     // Execute each query
     for (const query of queries) {
       if (query.trim()) {
+        console.log(`Executing query: ${query.substring(0, 50)}...`);
         await sequelize.query(query, {
           type: sequelize.QueryTypes.RAW,
         });
@@ -46,6 +49,7 @@ const executeSqlFile = async (filePath) => {
     return true;
   } catch (error) {
     console.error("Error initializing database from SQL file:", error.message);
+    console.error("Query that failed:", error.sql || "Unknown query");
     throw error;
   }
 };
@@ -68,7 +72,10 @@ const initializeDatabase = async () => {
     // Execute SQL file to seed data if needed
     const sqlFilePath = path.join(__dirname, "database.sql");
     if (fs.existsSync(sqlFilePath)) {
+      console.log(`Initializing database from SQL file: ${sqlFilePath}`);
       await executeSqlFile(sqlFilePath);
+    } else {
+      console.log(`SQL file not found at path: ${sqlFilePath}`);
     }
 
     return true;
