@@ -3,12 +3,30 @@
  */
 const fs = require("fs");
 const path = require("path");
-const { pool, initPool } = require("./database");
+const { sequelize, initPool } = require("./database");
 const config = require("./index");
 
-// Function to execute SQL file
+// Function untuk sinkronisasi model dengan database
+const syncModels = async () => {
+  try {
+    await sequelize.sync({ alter: true });
+    console.log("Database models synchronized successfully.");
+    return true;
+  } catch (error) {
+    console.error("Error synchronizing database models:", error.message);
+    throw error;
+  }
+};
+
+// Function to execute SQL file (untuk mempertahankan backward compatibility)
 const executeSqlFile = async (filePath) => {
   try {
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      console.log("SQL file not found, skipping initialization from SQL file.");
+      return true;
+    }
+
     // Read SQL file
     const sql = fs.readFileSync(filePath, "utf8");
 
@@ -18,14 +36,16 @@ const executeSqlFile = async (filePath) => {
     // Execute each query
     for (const query of queries) {
       if (query.trim()) {
-        await pool.query(query);
+        await sequelize.query(query, {
+          type: sequelize.QueryTypes.RAW,
+        });
       }
     }
 
-    console.log("Database initialized successfully.");
+    console.log("Database initialized from SQL file successfully.");
     return true;
   } catch (error) {
-    console.error("Error initializing database:", error.message);
+    console.error("Error initializing database from SQL file:", error.message);
     throw error;
   }
 };
@@ -40,11 +60,16 @@ const initializeDatabase = async () => {
     console.log(`Database '${dbName}' checked/created.`);
 
     // Use database
-    await pool.query(`USE \`${dbName}\``);
+    await sequelize.query(`USE \`${dbName}\``);
 
-    // Execute SQL file to create tables and seed data
+    // Sync all models with the database
+    await syncModels();
+
+    // Execute SQL file to seed data if needed
     const sqlFilePath = path.join(__dirname, "database.sql");
-    await executeSqlFile(sqlFilePath);
+    if (fs.existsSync(sqlFilePath)) {
+      await executeSqlFile(sqlFilePath);
+    }
 
     return true;
   } catch (error) {
@@ -55,4 +80,6 @@ const initializeDatabase = async () => {
 
 module.exports = {
   initializeDatabase,
+  syncModels,
+  executeSqlFile,
 };

@@ -1,8 +1,8 @@
 /**
  * BookRepository - Handles all database operations for Book entity
  */
-const { pool } = require("../config/database");
 const Book = require("../models/Book");
+const { ValidationError, Op } = require("sequelize");
 
 /**
  * Repository untuk mengelola operasi CRUD buku ke database
@@ -15,8 +15,8 @@ class BookRepository {
    */
   async findAll() {
     try {
-      const [rows] = await pool.query(`SELECT * FROM ${Book.TABLE_NAME}`);
-      return rows.map((row) => Book.fromDbRow(row));
+      const books = await Book.findAll();
+      return books.map((book) => book.toJSON());
     } catch (error) {
       console.error("Error finding all books:", error.message);
       throw error;
@@ -31,12 +31,8 @@ class BookRepository {
    */
   async findById(id) {
     try {
-      const [rows] = await pool.query(
-        `SELECT * FROM ${Book.TABLE_NAME} WHERE ${Book.COLUMNS.ID} = ?`,
-        [id]
-      );
-
-      return rows.length ? Book.fromDbRow(rows[0]) : null;
+      const book = await Book.findByPk(id);
+      return book ? book.toJSON() : null;
     } catch (error) {
       console.error(`Error finding book with id ${id}:`, error.message);
       throw error;
@@ -55,27 +51,18 @@ class BookRepository {
    */
   async create(bookData) {
     try {
-      // Validasi data buku
-      const validation = Book.validate(bookData);
-      if (!validation.isValid) {
-        const error = new Error(
-          "Validation failed: " + validation.errors.join(", ")
-        );
-        error.statusCode = 400;
-        throw error;
-      }
-
-      const { title, author, year, genre } = bookData;
-
-      const [result] = await pool.query(
-        `INSERT INTO ${Book.TABLE_NAME} (${Book.COLUMNS.TITLE}, ${Book.COLUMNS.AUTHOR}, ${Book.COLUMNS.YEAR}, ${Book.COLUMNS.GENRE}) 
-         VALUES (?, ?, ?, ?)`,
-        [title, author, year, genre]
-      );
-
-      const id = result.insertId;
-      return { id, title, author, year, genre };
+      const newBook = await Book.create(bookData);
+      return newBook.toJSON();
     } catch (error) {
+      if (error instanceof ValidationError) {
+        // Format validasi error dari Sequelize
+        const validationError = new Error(
+          "Validation failed: " +
+            error.errors.map((err) => err.message).join(", ")
+        );
+        validationError.statusCode = 400;
+        throw validationError;
+      }
       console.error("Error creating book:", error.message);
       throw error;
     }
@@ -94,38 +81,27 @@ class BookRepository {
    */
   async update(id, bookData) {
     try {
-      // Check if book exists
-      const book = await this.findById(id);
+      // Gunakan transaction untuk memastikan operasi atomik
+      const book = await Book.findByPk(id);
       if (!book) {
         return null;
       }
 
-      // Perbarui data buku
-      const { title, author, year, genre } = bookData;
+      // Update book data
+      await book.update(bookData);
 
-      const [result] = await pool.query(
-        `UPDATE ${Book.TABLE_NAME} 
-         SET ${Book.COLUMNS.TITLE} = ?, 
-             ${Book.COLUMNS.AUTHOR} = ?, 
-             ${Book.COLUMNS.YEAR} = ?, 
-             ${Book.COLUMNS.GENRE} = ? 
-         WHERE ${Book.COLUMNS.ID} = ?`,
-        [
-          title || book.title,
-          author || book.author,
-          year !== undefined ? year : book.year,
-          genre !== undefined ? genre : book.genre,
-          id,
-        ]
-      );
-
-      if (result.affectedRows === 0) {
-        return null;
-      }
-
-      // Kembalikan buku yang sudah diperbarui
-      return await this.findById(id);
+      // Return updated book
+      return book.toJSON();
     } catch (error) {
+      if (error instanceof ValidationError) {
+        // Format validasi error dari Sequelize
+        const validationError = new Error(
+          "Validation failed: " +
+            error.errors.map((err) => err.message).join(", ")
+        );
+        validationError.statusCode = 400;
+        throw validationError;
+      }
       console.error(`Error updating book with id ${id}:`, error.message);
       throw error;
     }
@@ -139,12 +115,10 @@ class BookRepository {
    */
   async delete(id) {
     try {
-      const [result] = await pool.query(
-        `DELETE FROM ${Book.TABLE_NAME} WHERE ${Book.COLUMNS.ID} = ?`,
-        [id]
-      );
-
-      return result.affectedRows > 0;
+      const result = await Book.destroy({
+        where: { id },
+      });
+      return result > 0;
     } catch (error) {
       console.error(`Error deleting book with id ${id}:`, error.message);
       throw error;
@@ -163,31 +137,26 @@ class BookRepository {
    */
   async findByCriteria(criteria) {
     try {
-      let query = `SELECT * FROM ${Book.TABLE_NAME} WHERE 1 = 1`;
-      const params = [];
+      const where = {};
 
       if (criteria.title) {
-        query += ` AND ${Book.COLUMNS.TITLE} LIKE ?`;
-        params.push(`%${criteria.title}%`);
+        where.title = { [Op.like]: `%${criteria.title}%` };
       }
 
       if (criteria.author) {
-        query += ` AND ${Book.COLUMNS.AUTHOR} LIKE ?`;
-        params.push(`%${criteria.author}%`);
+        where.author = { [Op.like]: `%${criteria.author}%` };
       }
 
       if (criteria.year) {
-        query += ` AND ${Book.COLUMNS.YEAR} = ?`;
-        params.push(criteria.year);
+        where.year = criteria.year;
       }
 
       if (criteria.genre) {
-        query += ` AND ${Book.COLUMNS.GENRE} = ?`;
-        params.push(criteria.genre);
+        where.genre = criteria.genre;
       }
 
-      const [rows] = await pool.query(query, params);
-      return rows.map((row) => Book.fromDbRow(row));
+      const books = await Book.findAll({ where });
+      return books.map((book) => book.toJSON());
     } catch (error) {
       console.error("Error finding books by criteria:", error.message);
       throw error;

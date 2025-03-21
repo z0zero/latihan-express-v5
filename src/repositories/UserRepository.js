@@ -1,9 +1,9 @@
 /**
  * UserRepository - Handles all database operations for User entity
  */
-const { pool } = require("../config/database");
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
+const { ValidationError, Op } = require("sequelize");
 
 /**
  * Repository untuk mengelola operasi CRUD user ke database
@@ -16,12 +16,10 @@ class UserRepository {
    */
   async findAll() {
     try {
-      const [rows] = await pool.query(
-        `SELECT ${User.COLUMNS.ID}, ${User.COLUMNS.NAME}, ${User.COLUMNS.EMAIL}, 
-         ${User.COLUMNS.ROLE}, ${User.COLUMNS.CREATED_AT}, ${User.COLUMNS.UPDATED_AT} 
-         FROM ${User.TABLE_NAME}`
-      );
-      return rows.map((row) => User.fromDbRow(row));
+      const users = await User.findAll({
+        attributes: { exclude: ["password"] },
+      });
+      return users.map((user) => user.toJSON());
     } catch (error) {
       console.error("Error finding all users:", error.message);
       throw error;
@@ -36,14 +34,10 @@ class UserRepository {
    */
   async findById(id) {
     try {
-      const [rows] = await pool.query(
-        `SELECT ${User.COLUMNS.ID}, ${User.COLUMNS.NAME}, ${User.COLUMNS.EMAIL}, 
-         ${User.COLUMNS.ROLE}, ${User.COLUMNS.CREATED_AT}, ${User.COLUMNS.UPDATED_AT} 
-         FROM ${User.TABLE_NAME} WHERE ${User.COLUMNS.ID} = ?`,
-        [id]
-      );
-
-      return rows.length ? User.fromDbRow(rows[0]) : null;
+      const user = await User.findByPk(id, {
+        attributes: { exclude: ["password"] },
+      });
+      return user ? user.toJSON() : null;
     } catch (error) {
       console.error(`Error finding user with id ${id}:`, error.message);
       throw error;
@@ -58,12 +52,11 @@ class UserRepository {
    */
   async findByEmail(email) {
     try {
-      const [rows] = await pool.query(
-        `SELECT * FROM ${User.TABLE_NAME} WHERE ${User.COLUMNS.EMAIL} = ?`,
-        [email]
-      );
+      const user = await User.findOne({
+        where: { email },
+      });
 
-      return rows.length ? User.fromDbRow(rows[0], true) : null;
+      return user ? user.toJSON() : null;
     } catch (error) {
       console.error(`Error finding user with email ${email}:`, error.message);
       throw error;
@@ -82,40 +75,40 @@ class UserRepository {
    */
   async create(userData) {
     try {
-      // Validasi data user
-      const validation = User.validate(userData);
-      if (!validation.isValid) {
-        const error = new Error(
-          "Validation failed: " + validation.errors.join(", ")
-        );
-        error.statusCode = 400;
-        throw error;
-      }
-
-      const { name, email, password, role = User.ROLES.USER } = userData;
-
-      // Check if email already exists
-      const existingUser = await this.findByEmail(email);
-      if (existingUser) {
-        const error = new Error("Email sudah terdaftar");
-        error.statusCode = 400;
-        throw error;
-      }
-
       // Hash password
       const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
+      const hashedPassword = await bcrypt.hash(userData.password, salt);
 
-      const [result] = await pool.query(
-        `INSERT INTO ${User.TABLE_NAME} 
-         (${User.COLUMNS.NAME}, ${User.COLUMNS.EMAIL}, ${User.COLUMNS.PASSWORD}, ${User.COLUMNS.ROLE}) 
-         VALUES (?, ?, ?, ?)`,
-        [name, email, hashedPassword, role]
-      );
+      // Create user with hashed password
+      const newUser = await User.create({
+        name: userData.name,
+        email: userData.email,
+        password: hashedPassword,
+        role: userData.role || User.ROLES.USER,
+      });
 
-      const id = result.insertId;
-      return { id, name, email, role };
+      // Return user without password
+      const user = newUser.toJSON();
+      delete user.password;
+      return user;
     } catch (error) {
+      // Handle validation errors
+      if (error instanceof ValidationError) {
+        const validationError = new Error(
+          "Validation failed: " +
+            error.errors.map((err) => err.message).join(", ")
+        );
+        validationError.statusCode = 400;
+        throw validationError;
+      }
+
+      // Handle unique constraint error (duplicate email)
+      if (error.name === "SequelizeUniqueConstraintError") {
+        const dupError = new Error("Email sudah terdaftar");
+        dupError.statusCode = 400;
+        throw dupError;
+      }
+
       console.error("Error creating user:", error.message);
       throw error;
     }
@@ -134,81 +127,57 @@ class UserRepository {
    */
   async update(id, userData) {
     try {
-      // Validasi data user untuk update
-      const validation = User.validate(userData, false);
-      if (!validation.isValid) {
-        const error = new Error(
-          "Validation failed: " + validation.errors.join(", ")
-        );
-        error.statusCode = 400;
-        throw error;
-      }
-
-      // Check if user exists
-      const user = await this.findById(id);
+      // Find user
+      const user = await User.findByPk(id);
       if (!user) {
         return null;
       }
 
-      const { name, email, password, role } = userData;
+      // Prepare update data
+      const updateData = {};
 
-      // If updating email, check if it's already used by another user
-      if (email && email !== user.email) {
-        const existingUser = await this.findByEmail(email);
-        if (existingUser && existingUser.id !== parseInt(id)) {
-          const error = new Error("Email sudah digunakan");
-          error.statusCode = 400;
-          throw error;
-        }
+      if (userData.name) {
+        updateData.name = userData.name;
       }
 
-      // Build update query
-      let updates = [];
-      let params = [];
-
-      if (name) {
-        updates.push(`${User.COLUMNS.NAME} = ?`);
-        params.push(name);
+      if (userData.email) {
+        updateData.email = userData.email;
       }
 
-      if (email) {
-        updates.push(`${User.COLUMNS.EMAIL} = ?`);
-        params.push(email);
+      if (userData.role) {
+        updateData.role = userData.role;
       }
 
-      if (password) {
+      if (userData.password) {
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-        updates.push(`${User.COLUMNS.PASSWORD} = ?`);
-        params.push(hashedPassword);
+        updateData.password = await bcrypt.hash(userData.password, salt);
       }
 
-      if (role) {
-        updates.push(`${User.COLUMNS.ROLE} = ?`);
-        params.push(role);
-      }
-
-      if (updates.length === 0) {
-        return user; // No updates to make
-      }
-
-      // Add id to params
-      params.push(id);
-
-      const [result] = await pool.query(
-        `UPDATE ${User.TABLE_NAME} SET ${updates.join(", ")} WHERE ${
-          User.COLUMNS.ID
-        } = ?`,
-        params
-      );
-
-      if (result.affectedRows === 0) {
-        return null;
-      }
+      // Update user
+      await user.update(updateData);
 
       // Return updated user without password
-      return await this.findById(id);
+      const updatedUser = user.toJSON();
+      delete updatedUser.password;
+      return updatedUser;
     } catch (error) {
+      // Handle validation errors
+      if (error instanceof ValidationError) {
+        const validationError = new Error(
+          "Validation failed: " +
+            error.errors.map((err) => err.message).join(", ")
+        );
+        validationError.statusCode = 400;
+        throw validationError;
+      }
+
+      // Handle unique constraint error (duplicate email)
+      if (error.name === "SequelizeUniqueConstraintError") {
+        const dupError = new Error("Email sudah digunakan");
+        dupError.statusCode = 400;
+        throw dupError;
+      }
+
       console.error(`Error updating user with id ${id}:`, error.message);
       throw error;
     }
@@ -222,12 +191,10 @@ class UserRepository {
    */
   async delete(id) {
     try {
-      const [result] = await pool.query(
-        `DELETE FROM ${User.TABLE_NAME} WHERE ${User.COLUMNS.ID} = ?`,
-        [id]
-      );
-
-      return result.affectedRows > 0;
+      const result = await User.destroy({
+        where: { id },
+      });
+      return result > 0;
     } catch (error) {
       console.error(`Error deleting user with id ${id}:`, error.message);
       throw error;
@@ -244,20 +211,24 @@ class UserRepository {
   async verifyCredentials(email, password) {
     try {
       // Find user by email
-      const user = await this.findByEmail(email);
+      const user = await User.findOne({
+        where: { email },
+      });
+
       if (!user) {
         return null;
       }
 
       // Check password
-      const isMatch = await bcrypt.compare(password, user.password);
+      const userJson = user.toJSON();
+      const isMatch = await bcrypt.compare(password, userJson.password);
       if (!isMatch) {
         return null;
       }
 
       // Return user without password
-      delete user.password;
-      return user;
+      delete userJson.password;
+      return userJson;
     } catch (error) {
       console.error("Error verifying credentials:", error.message);
       throw error;

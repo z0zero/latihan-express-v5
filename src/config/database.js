@@ -1,40 +1,32 @@
 /**
- * MySQL Database Configuration
+ * Sequelize Database Configuration
  */
-const mysql = require("mysql2/promise");
+const { Sequelize } = require("sequelize");
 const config = require("./index");
 
-// Create connection pool without specific database
-const createPool = (withDatabase = true) => {
-  const poolConfig = {
+// Create Sequelize instance
+const sequelize = new Sequelize(
+  config.db.database,
+  config.db.user,
+  config.db.password,
+  {
     host: config.db.host,
-    user: config.db.user,
-    password: config.db.password,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-  };
-
-  // Only include database if withDatabase is true
-  if (withDatabase) {
-    poolConfig.database = config.db.database;
+    dialect: "mysql",
+    logging: config.env === "development" ? console.log : false,
+    pool: {
+      max: 10,
+      min: 0,
+      acquire: 30000,
+      idle: 10000,
+    },
   }
-
-  return mysql.createPool(poolConfig);
-};
-
-// Initial pool without database for initialization
-const initPool = createPool(false);
-
-// Main pool with database for normal operations
-const pool = createPool(true);
+);
 
 // Function to test database connection
 const testConnection = async () => {
   try {
-    const connection = await initPool.getConnection();
-    console.log("MySQL Connection established successfully.");
-    connection.release();
+    await sequelize.authenticate();
+    console.log("MySQL Connection established successfully via Sequelize.");
     return true;
   } catch (error) {
     console.error("Error connecting to MySQL database:", error.message);
@@ -42,7 +34,37 @@ const testConnection = async () => {
   }
 };
 
+// Untuk backward compatibility
+const pool = {
+  query: async (sql, params) => {
+    // Gunakan sequelize.query untuk menjalankan raw SQL query
+    const [rows] = await sequelize.query(sql, {
+      replacements: params,
+      type: Sequelize.QueryTypes.SELECT,
+    });
+    return [rows];
+  },
+};
+
+const initPool = {
+  query: async (sql, params) => {
+    // Gunakan sequelize.query untuk menjalankan raw SQL query
+    return await sequelize.query(sql, {
+      replacements: params,
+      type: Sequelize.QueryTypes.RAW,
+    });
+  },
+  getConnection: async () => {
+    await sequelize.authenticate();
+    return {
+      release: () => {}, // Dummy release method for compatibility
+    };
+  },
+};
+
 module.exports = {
+  sequelize,
+  Sequelize,
   pool,
   initPool,
   testConnection,
