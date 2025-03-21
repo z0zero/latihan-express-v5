@@ -70,7 +70,7 @@ The application will automatically:
 1. Create the database if it doesn't exist
 2. Create the required tables
 3. Seed the database with initial data
-4. Create a default admin user (email: admin@example.com, password: admin123)
+4. Create a default admin user (email: admin@example.com, password: Password123)
 
 ## Authentication
 
@@ -113,9 +113,21 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
   "title": "The Great Gatsby",
   "author": "F. Scott Fitzgerald",
   "year": 1925,
-  "genre": "Novel"
+  "genre": "Novel",
+  "cover_image": "1742525040282-6.png",
+  "cover_url": "/uploads/covers/1742525040282-6.png"
 }
 ```
+
+## Cover Image Upload
+
+The API supports cover image upload for books with the following specifications:
+
+- Supported formats: JPG and PNG
+- Maximum file size: 2MB
+- Images are stored in the `uploads/covers` directory
+- File names are prefixed with a timestamp to prevent duplicates
+- Cover URL is returned in the book object as `cover_url`
 
 ## Role-Based Access Control
 
@@ -149,6 +161,7 @@ The API implements validation using Express Validator for the following:
 - `author`: Required, string, 2-255 characters
 - `year`: Optional, integer between 1000 and current year
 - `genre`: Optional, string, 2-100 characters
+- `cover_image`: Optional, file (JPG/PNG, max 2MB)
 
 #### Update Book Validation
 
@@ -157,6 +170,7 @@ The API implements validation using Express Validator for the following:
 - `author`: Optional, string, 2-255 characters
 - `year`: Optional, integer between 1000 and current year
 - `genre`: Optional, string, 2-100 characters
+- `cover_image`: Optional, file (JPG/PNG, max 2MB)
 
 ### Error Response Format
 
@@ -185,7 +199,7 @@ When validation fails, the API responds with a 400 Bad Request status and a JSON
 **Request:**
 
 ```http
-POST /api/auth/login
+POST /api/auth/register
 Content-Type: application/json
 
 {
@@ -251,14 +265,15 @@ Content-Type: application/json
 
 ```http
 POST /api/books
-Content-Type: application/json
+Content-Type: multipart/form-data
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 {
   "title": "The Hobbit",
   "author": "J.R.R. Tolkien",
   "year": 1937,
-  "genre": "Fantasy"
+  "genre": "Fantasy",
+  "cover_image": [file] # Optional cover image (JPG/PNG, max 2MB)
 }
 ```
 
@@ -272,7 +287,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
     "title": "The Hobbit",
     "author": "J.R.R. Tolkien",
     "year": 1937,
-    "genre": "Fantasy"
+    "genre": "Fantasy",
+    "cover_image": "1742525040282-4.jpg",
+    "cover_url": "/uploads/covers/1742525040282-4.jpg"
   }
 }
 ```
@@ -281,46 +298,55 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ```
 express-js/crud/
-├── backend/                # Backend directory
-│   ├── src/
-│   │   ├── config/
-│   │   │   ├── index.js    # Main configuration
-│   │   │   ├── database.js # Database connection
-│   │   │   ├── database.sql # SQL schema
-│   │   │   └── initDb.js   # Database initialization
-│   │   ├── controllers/
-│   │   │   ├── authController.js # Auth controllers
-│   │   │   └── bookController.js # Book controllers
-│   │   ├── middleware/
-│   │   │   └── auth.js     # Authentication middleware
-│   │   ├── models/
-│   │   │   ├── Book.js     # Book model
-│   │   │   └── User.js     # User model
-│   │   ├── routes/
-│   │   │   ├── index.js    # Routes index
-│   │   │   ├── authRoutes.js # Auth routes
-│   │   │   └── bookRoutes.js # Book routes
-│   │   ├── validators/
-│   │   │   ├── index.js    # Global validation utilities
-│   │   │   ├── authValidator.js # Auth validation rules
-│   │   │   └── bookValidator.js # Book validation rules
-│   │   └── index.js        # Application entry point
-│   ├── .env                # Environment variables (not in git)
-│   ├── .env.example        # Example environment variables
-│   ├── package.json        # Backend dependencies and scripts
-│   └── README.md           # Backend documentation
-│
+├── src/
+│   ├── config/
+│   │   ├── index.js        # Main configuration
+│   │   ├── database.js     # Database connection with Sequelize
+│   │   ├── database.sql    # SQL schema
+│   │   ├── initDb.js       # Database initialization
+│   │   └── uploadConfig.js # File upload configuration
+│   ├── controllers/
+│   │   ├── authController.js # Auth controllers
+│   │   └── bookController.js # Book controllers
+│   ├── middleware/
+│   │   └── auth.js         # Authentication middleware
+│   ├── models/
+│   │   ├── index.js        # Models index
+│   │   ├── Book.js         # Book model using Sequelize
+│   │   └── User.js         # User model using Sequelize
+│   ├── repositories/
+│   │   ├── BookRepository.js # Book data access layer
+│   │   └── UserRepository.js # User data access layer
+│   ├── services/
+│   │   └── AuthService.js  # Authentication service
+│   ├── routes/
+│   │   ├── index.js        # Routes index
+│   │   ├── authRoutes.js   # Auth routes
+│   │   └── bookRoutes.js   # Book routes
+│   ├── validators/
+│   │   ├── index.js        # Global validation utilities
+│   │   ├── authValidator.js # Auth validation rules
+│   │   └── bookValidator.js # Book validation rules
+│   └── index.js            # Application entry point
+├── uploads/
+│   └── covers/             # Book cover images storage
 ├── frontend/              # Frontend directory
 │   ├── src/
 │   │   ├── assets/        # Static assets
 │   │   ├── components/    # Reusable components
-│   │   │   ├── Navbar.jsx # Navigation bar component
+│   │   │   ├── AlertModal.jsx    # Alert modal component
+│   │   │   ├── BookCover.jsx     # Book cover component
+│   │   │   ├── BookTable.jsx     # Book table component
+│   │   │   ├── ErrorAlert.jsx    # Error alert component
+│   │   │   ├── ImagePreview.jsx  # Image preview component
+│   │   │   ├── LoadingSpinner.jsx # Loading spinner component
+│   │   │   ├── Navbar.jsx        # Navigation bar component
 │   │   │   └── ProtectedRoute.jsx # Authentication route wrapper
 │   │   ├── context/
 │   │   │   └── AuthContext.jsx # Authentication context
 │   │   ├── pages/
-│   │   │   ├── Home.jsx   # Home page
-│   │   │   ├── Login.jsx  # Login page
+│   │   │   ├── Home.jsx    # Home page
+│   │   │   ├── Login.jsx   # Login page
 │   │   │   ├── Register.jsx # Registration page
 │   │   │   ├── BookList.jsx # Book listing page
 │   │   │   └── BookForm.jsx # Book creation/edit form
@@ -334,11 +360,29 @@ express-js/crud/
 │   ├── tailwind.config.js # Tailwind CSS configuration
 │   ├── postcss.config.js  # PostCSS configuration
 │   └── package.json       # Frontend dependencies and scripts
-│
-├── .gitignore            # Git ignore file
-├── package.json          # Project metadata and dependencies
-└── README.md             # This file
+├── .env                   # Environment variables (not in git)
+├── .env.example           # Example environment variables
+├── .gitignore             # Git ignore file
+├── package.json           # Project metadata and dependencies
+└── README.md              # This file
 ```
+
+## Architecture
+
+The application follows a layered architecture pattern:
+
+1. **Controllers**: Handle HTTP requests and responses
+2. **Repositories**: Handle data access logic
+3. **Services**: Contain business logic
+4. **Models**: Define database schemas using Sequelize ORM
+5. **Validators**: Handle input validation
+6. **Middleware**: Handle cross-cutting concerns
+
+This architecture promotes:
+
+- Separation of Concerns
+- Single Responsibility Principle
+- Code maintainability and testability
 
 ## Technologies Used
 
@@ -346,8 +390,10 @@ express-js/crud/
 
 - Express.js v5
 - MySQL
+- Sequelize ORM
 - JWT Authentication
 - Express Validator
+- Multer for file uploads
 
 ### Frontend
 
