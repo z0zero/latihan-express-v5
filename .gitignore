@@ -65,3 +65,6 @@ desktop.ini
 
 # Keep example .env file
 !.env.example 
+
+# Cover images
+public/uploads/covers/
