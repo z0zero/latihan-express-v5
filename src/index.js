@@ -4,6 +4,8 @@
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
+const path = require("path");
+const multer = require("multer");
 const config = require("./config");
 const routes = require("./routes");
 const { testConnection } = require("./config/database");
@@ -18,6 +20,9 @@ app.use(express.urlencoded({ extended: false })); // Body parser for form data
 app.use(cors()); // Enable CORS for all routes
 app.use(morgan("dev")); // HTTP request logger
 
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, "..", "public")));
+
 // API Routes
 app.use("/api", routes);
 
@@ -27,6 +32,26 @@ app.use((req, res, next) => {
     success: false,
     error: "Route not found",
   });
+});
+
+// Multer Error Handler
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    // Multer error handling
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        success: false,
+        error: "Ukuran file terlalu besar (maksimal 5MB)",
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      error: `Error upload file: ${err.message}`,
+    });
+  }
+
+  next(err);
 });
 
 // Global error handler

@@ -36,6 +36,11 @@ const validateCreateBook = [
     .isLength({ min: 2, max: 100 })
     .withMessage("Genre buku harus memiliki 2-100 karakter"),
 
+  body("cover_image")
+    .optional()
+    .isString()
+    .withMessage("Cover image harus berupa path string"),
+
   validate,
 ];
 
@@ -74,6 +79,11 @@ const validateUpdateBook = [
     .withMessage("Genre buku harus berupa teks")
     .isLength({ min: 2, max: 100 })
     .withMessage("Genre buku harus memiliki 2-100 karakter"),
+
+  body("cover_image")
+    .optional()
+    .isString()
+    .withMessage("Cover image harus berupa path string"),
 
   validate,
 ];

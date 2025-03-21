@@ -7,6 +7,7 @@
  * - author: The author of the book (required)
  * - year: The publication year (optional)
  * - genre: The genre of the book (optional)
+ * - cover_image: The cover image path (optional)
  */
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/database");
@@ -19,6 +20,7 @@ const { sequelize } = require("../config/database");
  * @property {string} author - Book author
  * @property {number|null} year - Publication year
  * @property {string|null} genre - Book genre
+ * @property {string|null} cover_image - Book cover image path
  */
 
 // Definisi Model menggunakan Sequelize
@@ -70,6 +72,10 @@ const Book = sequelize.define(
       type: DataTypes.STRING(100),
       allowNull: true,
     },
+    cover_image: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
   },
   {
     tableName: "books",
@@ -86,6 +92,7 @@ Book.COLUMNS = {
   AUTHOR: "author",
   YEAR: "year",
   GENRE: "genre",
+  COVER_IMAGE: "cover_image",
 };
 
 /**
@@ -102,6 +109,7 @@ Book.fromDbRow = (row) => {
     author: row.author,
     year: row.year || null,
     genre: row.genre || null,
+    cover_image: row.cover_image || null,
   };
 };
 
