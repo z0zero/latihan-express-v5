@@ -67,6 +67,11 @@ const BookForm = () => {
   const showErrorModal = (message) => {
     setModalMessage(message);
     setShowModal(true);
+
+    // Otomatis hilangkan modal setelah 3 detik
+    setTimeout(() => {
+      setShowModal(false);
+    }, 3000);
   };
 
   const handleFileChange = (e) => {
@@ -155,16 +160,26 @@ const BookForm = () => {
   }
 
   return (
-    <div className="max-w-[80rem] mx-auto px-4 py-8">
-      {/* Modal untuk error pesan */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
-            <div className="flex items-start mb-4">
-              <div className="flex-shrink-0 bg-[#fee2e2] rounded-full p-2">
+    <div className="max-w-[80rem] mx-auto px-4 py-8 relative">
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-2xl font-bold text-[#111827] mb-6">
+          {isEditMode ? "Edit Buku" : "Tambah Buku Baru"}
+        </h1>
+
+        {error && (
+          <div className="bg-[#fee2e2] border border-[#f87171] text-[#b91c1c] p-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+
+        {/* Modal untuk pesan error */}
+        {showModal && (
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-lg p-8 max-w-2xl w-full shadow-xl border-2 border-[#f87171]">
+            <div className="flex items-start">
+              <div className="flex-shrink-0 bg-[#fee2e2] rounded-full p-3 mr-5">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-[#ef4444]"
+                  className="h-8 w-8 text-[#ef4444]"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -177,36 +192,24 @@ const BookForm = () => {
                   />
                 </svg>
               </div>
-              <div className="ml-3">
-                <h3 className="text-lg font-medium text-[#111827]">
+              <div className="flex-1">
+                <h3 className="text-xl font-medium text-[#111827]">
                   Peringatan
                 </h3>
-                <div className="mt-2 text-sm text-[#6b7280]">
+                <div className="mt-2 text-base text-[#6b7280]">
                   {modalMessage}
+                </div>
+                <div className="mt-5 flex justify-end">
+                  <button
+                    type="button"
+                    className="px-4 py-2 bg-[#3b82f6] text-white text-base rounded hover:bg-[#2563eb]"
+                    onClick={() => setShowModal(false)}
+                  >
+                    Tutup
+                  </button>
                 </div>
               </div>
             </div>
-            <div className="flex justify-end">
-              <button
-                type="button"
-                className="px-4 py-2 bg-[#3b82f6] text-white rounded hover:bg-[#2563eb]"
-                onClick={() => setShowModal(false)}
-              >
-                Tutup
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold text-[#111827] mb-6">
-          {isEditMode ? "Edit Buku" : "Tambah Buku Baru"}
-        </h1>
-
-        {error && (
-          <div className="bg-[#fee2e2] border border-[#f87171] text-[#b91c1c] p-3 rounded mb-4">
-            {error}
           </div>
         )}
 
