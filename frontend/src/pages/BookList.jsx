@@ -3,6 +3,11 @@ import { Link, useLocation } from "react-router-dom";
 import api from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 
+// Import komponen
+import LoadingSpinner from "../components/LoadingSpinner";
+import ErrorAlert from "../components/ErrorAlert";
+import BookTable from "../components/BookTable";
+
 const BookList = () => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,19 +48,13 @@ const BookList = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[100vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b82f6]"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (error) {
     return (
       <div className="max-w-[80rem] mx-auto px-4 py-8">
-        <div className="bg-[#fee2e2] border border-[#f87171] text-[#b91c1c] p-3 rounded">
-          {error}
-        </div>
+        <ErrorAlert message={error} />
       </div>
     );
   }
@@ -93,116 +92,12 @@ const BookList = () => {
         </div>
       </div>
 
-      {books.length === 0 ? (
-        <div className="text-center py-10">
-          <p className="text-[#6b7280]">
-            Belum ada buku. Silakan tambahkan buku baru.
-          </p>
-        </div>
-      ) : (
-        <div className="bg-white shadow overflow-hidden rounded-lg">
-          <table className="min-w-full divide-y divide-[#e5e7eb]">
-            <thead className="bg-[#f9fafb]">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">
-                  Cover
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">
-                  Judul
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">
-                  Penulis
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">
-                  Tahun
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#6b7280] uppercase tracking-wider">
-                  Genre
-                </th>
-                {isAuthenticated && (
-                  <th className="px-6 py-3 text-right text-xs font-medium text-[#6b7280] uppercase tracking-wider">
-                    Aksi
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-[#e5e7eb]">
-              {books.map((book) => (
-                <tr key={book.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {book.cover_url ? (
-                      <img
-                        src={`http://localhost:3000${book.cover_url}`}
-                        alt={`Cover ${book.title}`}
-                        className="h-20 w-16 object-cover rounded shadow"
-                        onError={(e) => {
-                          console.error("Error loading image:", e);
-                          e.target.onerror = null;
-                          e.target.src =
-                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='1' d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'/%3E%3C/svg%3E";
-                        }}
-                      />
-                    ) : (
-                      <div className="h-20 w-16 bg-[#e5e7eb] rounded flex items-center justify-center text-[#9ca3af]">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-10 w-10"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-[#111827]">
-                      {book.title}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-[#6b7280]">{book.author}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-[#6b7280]">
-                      {book.year || "-"}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-[#6b7280]">
-                      {book.genre || "-"}
-                    </div>
-                  </td>
-                  {isAuthenticated && (
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link
-                        to={`/books/${book.id}/edit`}
-                        className="btn btn-primary mr-4"
-                      >
-                        Edit
-                      </Link>
-                      {isAdmin() && (
-                        <button
-                          onClick={() => handleDelete(book.id)}
-                          className="btn btn-danger"
-                        >
-                          Hapus
-                        </button>
-                      )}
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <BookTable
+        books={books}
+        isAuthenticated={isAuthenticated}
+        isAdmin={isAdmin}
+        onDelete={handleDelete}
+      />
     </div>
   );
 };

@@ -2,6 +2,12 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../utils/api";
 
+// Import komponen
+import LoadingSpinner from "../components/LoadingSpinner";
+import ErrorAlert from "../components/ErrorAlert";
+import AlertModal from "../components/AlertModal";
+import ImagePreview from "../components/ImagePreview";
+
 const BookForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -152,11 +158,7 @@ const BookForm = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[100vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b82f6]"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -166,52 +168,14 @@ const BookForm = () => {
           {isEditMode ? "Edit Buku" : "Tambah Buku Baru"}
         </h1>
 
-        {error && (
-          <div className="bg-[#fee2e2] border border-[#f87171] text-[#b91c1c] p-3 rounded mb-4">
-            {error}
-          </div>
-        )}
+        <ErrorAlert message={error} />
 
         {/* Modal untuk pesan error */}
-        {showModal && (
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-lg p-8 max-w-2xl w-full shadow-xl border-2 border-[#f87171]">
-            <div className="flex items-start">
-              <div className="flex-shrink-0 bg-[#fee2e2] rounded-full p-3 mr-5">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-8 w-8 text-[#ef4444]"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-medium text-[#111827]">
-                  Peringatan
-                </h3>
-                <div className="mt-2 text-base text-[#6b7280]">
-                  {modalMessage}
-                </div>
-                <div className="mt-5 flex justify-end">
-                  <button
-                    type="button"
-                    className="px-4 py-2 bg-[#3b82f6] text-white text-base rounded hover:bg-[#2563eb]"
-                    onClick={() => setShowModal(false)}
-                  >
-                    Tutup
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <AlertModal
+          show={showModal}
+          onClose={() => setShowModal(false)}
+          message={modalMessage}
+        />
 
         <form
           onSubmit={handleSubmit}
@@ -298,45 +262,10 @@ const BookForm = () => {
                 />
               </div>
 
-              {previewUrl && (
-                <div className="mt-4">
-                  <p className="text-sm text-[#6b7280] mb-2">Preview:</p>
-                  <div className="relative inline-block">
-                    <img
-                      src={previewUrl}
-                      alt="Cover preview"
-                      className="h-40 object-cover rounded border border-[#e5e7eb]"
-                      onError={(e) => {
-                        console.error("Error loading image:", e);
-                        e.target.onerror = null;
-                        e.target.src =
-                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='1' d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'/%3E%3C/svg%3E";
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="absolute -top-2 -right-2 bg-[#ef4444] text-white rounded-full p-1"
-                      title="Hapus gambar"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              )}
+              <ImagePreview
+                imageUrl={previewUrl}
+                onRemove={handleRemoveImage}
+              />
 
               <p className="mt-2 text-sm text-[#6b7280]">
                 Format yang didukung: JPG, PNG. Maksimal 2MB.

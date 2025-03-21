@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../utils/api";
+import ErrorAlert from "../components/ErrorAlert";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -58,6 +60,10 @@ const Register = () => {
     }
   };
 
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
       <div className="card max-w-md w-full my-8">
@@ -76,11 +82,7 @@ const Register = () => {
           </p>
         </div>
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 p-3 rounded mt-4">
-            {error}
-          </div>
-        )}
+        <ErrorAlert message={error} />
 
         <form className="mt-8" onSubmit={handleSubmit}>
           <div className="mb-6">
